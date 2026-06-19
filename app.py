@@ -3,59 +3,73 @@ from scipy.optimize import linprog
 
 st.title("Optimización de Producción en una Imprenta")
 
-# Maximizar Z = 25x + 50y
-# linprog minimiza, por eso usamos coeficientes negativos
-c = [-25, -50]
+st.header("Función Objetivo")
 
-# Restricciones:
-# x + y <= 90
-# 4x + 6y >= 390  ->  -4x - 6y <= -390
-# 15x + 40y <= 2000
+ganancia_x = st.number_input("Ganancia por Folleto (x)", value=25.0)
+ganancia_y = st.number_input("Ganancia por Afiche (y)", value=50.0)
 
-A_ub = [
-    [1, 1],
-    [-4, -6],
-    [15, 40]
-]
+st.header("Restricciones")
 
-b_ub = [
-    90,
-    -390,
-    2000
-]
+r1_x = st.number_input("Restricción 1 - Coeficiente de x", value=1.0)
+r1_y = st.number_input("Restricción 1 - Coeficiente de y", value=1.0)
+r1_b = st.number_input("Restricción 1 - Límite", value=90.0)
 
-bounds = [
-    (0, None),  # x >= 0
-    (0, None)   # y >= 0
-]
+r2_x = st.number_input("Restricción 2 - Coeficiente de x", value=-4.0)
+r2_y = st.number_input("Restricción 2 - Coeficiente de y", value=-6.0)
+r2_b = st.number_input("Restricción 2 - Límite", value=-390.0)
 
-resultado = linprog(
-    c=c,
-    A_ub=A_ub,
-    b_ub=b_ub,
-    bounds=bounds,
-    method="highs"
-)
+r3_x = st.number_input("Restricción 3 - Coeficiente de x", value=15.0)
+r3_y = st.number_input("Restricción 3 - Coeficiente de y", value=40.0)
+r3_b = st.number_input("Restricción 3 - Límite", value=2000.0)
 
-st.header("Resultados")
+if st.button("Resolver"):
 
-if resultado.success:
-    x = resultado.x[0]
-    y = resultado.x[1]
-    ganancia = -resultado.fun
+    c = [-ganancia_x, -ganancia_y]
 
-    st.success("Se encontró una solución óptima")
+    A_ub = [
+        [r1_x, r1_y],
+        [r2_x, r2_y],
+        [r3_x, r3_y]
+    ]
 
-    st.write(f"**Folletos a producir:** {round(x)}")
-    st.write(f"**Afiches a producir:** {round(y)}")
-    st.write(f"**Ganancia máxima:** ${ganancia:.2f}")
+    b_ub = [
+        r1_b,
+        r2_b,
+        r3_b
+    ]
 
-    st.subheader("Verificación de restricciones")
+    bounds = [
+        (0, None),
+        (0, None)
+    ]
 
-    st.write(f"x + y = {x + y:.2f} ≤ 90")
-    st.write(f"4x + 6y = {4*x + 6*y:.2f} ≥ 390")
-    st.write(f"15x + 40y = {15*x + 40*y:.2f} ≤ 2000")
+    resultado = linprog(
+        c=c,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        bounds=bounds,
+        method="highs"
+    )
 
-else:
-    st.error("No se encontró una solución factible")
-    st.write(resultado.message)
+    st.header("Resultados")
+
+    if resultado.success:
+        x = resultado.x[0]
+        y = resultado.x[1]
+        ganancia = -resultado.fun
+
+        st.success("Se encontró una solución óptima")
+
+        st.write(f"**Folletos a producir:** {round(x)}")
+        st.write(f"**Afiches a producir:** {round(y)}")
+        st.write(f"**Ganancia máxima:** ${ganancia:.2f}")
+
+        st.subheader("Verificación de restricciones")
+
+        st.write(f"Restricción 1: {r1_x*x + r1_y*y:.2f} ≤ {r1_b}")
+        st.write(f"Restricción 2: {r2_x*x + r2_y*y:.2f} ≤ {r2_b}")
+        st.write(f"Restricción 3: {r3_x*x + r3_y*y:.2f} ≤ {r3_b}")
+
+    else:
+        st.error("No se encontró una solución factible")
+        st.write(resultado.message)
