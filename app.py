@@ -1,5 +1,7 @@
 import streamlit as st
 from scipy.optimize import linprog
+import matplotlib.pyplot as plt
+import numpy as np
 
 st.title("Optimización de Mezcla de Combustibles")
 
@@ -89,6 +91,58 @@ def resolver_modelo(
     )
 
 
+def mostrar_grafico(
+    petroleo_premium,
+    petroleo_regular,
+    petroleo_disponible,
+    max_premium,
+    max_regular,
+    x_opt,
+    y_opt
+):
+    x = np.linspace(0, max_premium + 20, 500)
+
+    y_petroleo = (
+        petroleo_disponible - petroleo_premium * x
+    ) / petroleo_regular
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    ax.plot(
+        x,
+        y_petroleo,
+        label=f"{petroleo_premium}x + {petroleo_regular}y ≤ {petroleo_disponible}"
+    )
+
+    ax.axvline(
+        max_premium,
+        label=f"x ≤ {max_premium}"
+    )
+
+    ax.axhline(
+        max_regular,
+        label=f"y ≤ {max_regular}"
+    )
+
+    ax.scatter(
+        x_opt,
+        y_opt,
+        s=120,
+        label="Solución óptima"
+    )
+
+    ax.set_xlim(0, max_premium + 20)
+    ax.set_ylim(0, max_regular + 20)
+
+    ax.set_xlabel("Litros de Premium (x)")
+    ax.set_ylabel("Litros de Regular (y)")
+    ax.set_title("Región factible y solución óptima")
+    ax.grid(True)
+    ax.legend()
+
+    st.pyplot(fig)
+
+
 if st.button("Resolver"):
 
     resultado = resolver_modelo(
@@ -129,6 +183,18 @@ if st.button("Resolver"):
 
         st.write(
             f"Regular producido: {y:.2f} ≤ {max_regular}"
+        )
+
+        st.subheader("Gráfico")
+
+        mostrar_grafico(
+            petroleo_premium,
+            petroleo_regular,
+            petroleo_disponible,
+            max_premium,
+            max_regular,
+            x,
+            y
         )
 
     else:
